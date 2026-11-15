@@ -68,6 +68,38 @@ Tutti i servizi sono orchestrati in [`docker/docker-compose.yml`](docker/docker-
 
 ---
 
+## Funzionalità & Scenari Applicativi (Roadmap)
+
+### 1. Controllo Domotico & Clima (Core)
+- **Gestione Luci & Stanze:** Accensione e spegnimento istantanei tramite comandi vocali o touch sul pannello AMOLED (`Shelly Plus 2PM` e `Shelly 1PM Mini Gen3` su rete locale via MQTT JSON-RPC).
+- **Termoregolazione Intelligente:** Controllo a contatto pulito per Caldaia e Chiller (`Shelly 1 Mini Gen3`) basato sulle letture dei sensori ambientali (`Shelly BLU H&T` e sonde `SCD40`), con fail-safe di sicurezza.
+- **Sincronizzazione Sveglia-Luce:** Collegamento dell'orario di sveglia all'accensione graduale o programmata delle luci al mattino.
+
+### 2. Qualità dell'Aria & Monitoraggio Ambientale (CO₂)
+- **Rilevamento Reale NDIR:** Lettura continua di CO₂ (`ppm`), temperatura e umidità tramite sensori `Sensirion SCD40` (su bus I2C dei satelliti o in moduli da incasso 503).
+- **Alert Vocali con Isteresi & Cooldown:** Avviso vocale mirato esclusivamente nel satellite della stanza interessata quando la CO₂ supera `1200–1300 ppm` (con blocco anti-spam di 30 minuti, salvo picchi critici `>1600 ppm`).
+- **Indicatore Visivo HUD:** Badge dinamico verde/ambra/rosso sulla dashboard React e sul mini-display del satellite.
+
+### 3. Integrazione Smartphone Android (Zero Porte Aperte)
+- **Programmazione Sveglie Vocali:** Comando in linguaggio naturale (es. *"Vexis, metti una sveglia alle 6:30"* oppure *"domani faccio il turno di mattina"* con calcolo automatico dell'orario). Il backend Node.js invia una push ad alta priorità tramite **Ntfy** che esegue un **Broadcast Intent nativo Android** (`android.intent.action.SET_ALARM` con `SKIP_UI: true`) senza dover sbloccare il telefono.
+- **Invio Percorsi, Link e Azioni:** L'LLM può inviare sullo smartphone itinerari (aprendo Google Maps/navigatore tramite Intent o URL), promemoria o notifiche push urgenti (es. allerta CO₂ critica).
+
+### 4. Accesso Ospiti & Interfaccia Effimera (Macchina a Stati)
+- **QR Code Ospiti Dinamico:** Comando vocale (es. *"Vexis, mostra il QR per gli ospiti"*) che genera e proietta sul pannello AMOLED (o sul display del satellite) un QR code con credenziali Wi-Fi Guest o token JWT temporaneo a scadenza, limitato al solo controllo delle luci nelle aree comuni.
+- **Auto-Dismiss & Fail-Safe Schermo:** Macchina a stati (`IDLE` → `LISTENING` → `EXECUTING` → `TEMPORARY_MODAL`) con chiusura automatica delle modali dopo `60–90 secondi`, chiusura manuale con un tap o interruzione immediata tramite nuova wake word.
+
+### 5. Integrazione Homelab & Interrogazione Dati (Ollama Tools)
+- **Diagnostica & Storage Server:** Interrogazione vocale sullo stato del Mini PC, carico CPU/RAM e spazio libero/occupato su NVMe e unità secondaria (`get_system_storage`).
+- **Ricerca Semantica Foto & Proiezione (Immich):** Comando vocale (es. *"Mostra quella foto di quando siamo andati a Gardaland"*); il backend interroga `/api/search/smart` su Immich tramite API Key **read-only** e apre un carosello fotografico temporaneo sul pannello AMOLED da 7".
+- **Controllo Media & Servizi:** Interrogazione dello stato dei servizi Homelab (`Jellyfin`, `Vaultwarden`, `Immich`) tramite healthcheck e tool dedicati del backend.
+
+### 6. Interazione Vocale & UX HUD
+- **Doppia Wake Word & Barge-In:** Attivazione locale su `ESP32-S3` tramite `Vexis` + parola di stop/interruzione immediata per troncare risposte lunghe o TTS in corso.
+- **Personalità & Memoria Anti-Context-Rot:** Tono asciutto e analitico (stile *Chatty Stick* / *EDI*), sessioni stateless per stanza con sliding window (max 3 turni, TTL 45–60s) e iniezione live dello stato MQTT ad ogni richiesta.
+- **Visualizer Ottico AMOLED:** Interfaccia su nero puro `#000000` con nucleo grafico centrale reattivo allo stato del sistema (ascolto, elaborazione, alert).
+
+---
+
 ## Struttura della Repository
 
 ```text

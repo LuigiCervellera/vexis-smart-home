@@ -56,3 +56,33 @@ vexis-smart-home/
 ├── backend/                   # Server orchestratore Node.js / TypeScript
 ├── frontend/                  # Dashboard React + Tailwind + Shadcn (Kiosk AMOLED)
 └── firmware/                  # Codice C++ PlatformIO / ESPHome per ESP32-S3 e C3
+
+## 6. Funzionalità & Scenari Applicativi (Roadmap per Sviluppo)
+
+### 1. Controllo Domotico & Clima (Core)
+- **Gestione Luci & Stanze:** Accensione/spegnimento istantaneo tramite comandi vocali o touch sul pannello AMOLED (Shelly Plus 2PM e Shelly 1PM Mini Gen3 su rete locale via MQTT).
+- **Termoregolazione Intelligente:** Controllo contatto pulito per Caldaia e Chiller (Shelly 1 Mini Gen3) basato sulle letture dei sensori ambientali (`Shelly BLU H&T` e sonde `SCD40`).
+- **Sincronizzazione Sveglia-Luce:** Possibilità di collegare l'orario di sveglia all'accensione graduale o programmata delle luci al mattino.
+
+### 2. Qualità dell'Aria & Monitoraggio Ambientale ($\text{CO}_2$)
+- **Rilevamento Reale NDIR:** Lettura continua di $\text{CO}_2$ (ppm), temperatura e umidità tramite sensori `Sensirion SCD40` (su bus I2C dei satelliti o in moduli da incasso 503).
+- **Alert Vocali con Isteresi & Cooldown:** Avviso vocale mirato esclusivamente nel satellite della stanza interessata quando la $\text{CO}_2$ supera i `1200-1300 ppm` (con blocco anti-spam di 30 minuti, salvo picchi critici $>1600\text{ ppm}$).
+- **Indicatore Visivo HUD:** Badge dinamico verde/ambra/rosso sulla dashboard React e sul mini-display del satellite.
+
+### 3. Integrazione Smartphone Android (Zero Porte Aperte)
+- **Programmazione Sveglie Vocali:** Comando vocale natural-language (es. *"Vexis, metti una sveglia alle 6:30"* oppure *"domani faccio il turno di mattina"* con calcolo automatico dell'orario). Il backend Node.js invia una push ad alta priorità tramite **Ntfy** che esegue un **Broadcast Intent nativo Android** (`android.intent.action.SET_ALARM` con `SKIP_UI: true`) impostando la sveglia nell'orologio di sistema senza sbloccare il telefono.
+- **Invio Percorsi, Link e Azioni al Telefono:** Capacità dell'LLM di inviare sullo smartphone itinerari/destinazioni (aprendo direttamente Google Maps / navigatore tramite Intent o URL), promemoria o notifiche push urgenti (es. allerta $\text{CO}_2$ critica).
+
+### 4. Accesso Ospiti & Interfaccia Effimera (Macchina a Stati)
+- **QR Code Ospiti Dinamico:** Comando vocale (es. *"Vexis, mostra il QR per gli ospiti"*) che genera e proietta sul pannello AMOLED a muro (o sul display del satellite) un QR code con credenziali Wi-Fi Guest o token JWT temporaneo a scadenza per controllare solo le luci delle aree comuni.
+- **Auto-Dismiss & Fail-Safe Schermo:** Macchina a stati (`IDLE` $\rightarrow$ `LISTENING` $\rightarrow$ `EXECUTING` $\rightarrow$ `TEMPORARY_MODAL`) con chiusura automatica delle schermate temporanee dopo `60-90 secondi`, chiusura manuale con un tap o interruzione immediata tramite nuova wake word.
+
+### 5. Integrazione Homelab & Interrogazione Dati (Ollama Tools)
+- **Diagnostica & Storage Server:** Possibilità di chiedere a voce lo stato del Mini PC, il carico CPU/RAM e lo spazio libero/occupato sui dischi NVMe e sull'unità secondaria (`get_system_storage`).
+- **Ricerca Semantica Foto & Proiezione (Immich):** Comando vocale (es. *"Mostra quella foto di quando siamo andati a Gardaland"*); Node.js interroga la REST API di Immich (`/api/search/smart` tramite API Key read-only) e apre un carosello fotografico temporaneo sul pannello AMOLED da 7".
+- **Controllo Media & Servizi:** Gestione e interrogazione stato dei container Docker (`Jellyfin`, `Vaultwarden`, `Immich`) tramite strumenti dedicati del backend.
+
+### 6. Interazione Vocale & UX HUD
+- **Doppia Wake Word & Barge-In:** Attivazione locale su ESP32-S3 tramite `Vexis` + parola di stop/interruzione immediata per troncare risposte lunghe o TTS in corso.
+- **Personalità & Memoria Anti-Context-Rot:** Tono asciutto e analitico (stile *Chatty Stick* / *EDI*), sessioni stateless per stanza con finestra scorrevole (max 3 turni, TTL 45-60s) e iniezione live dello stato MQTT della casa ad ogni richiesta.
+- **Visualizer Ottico AMOLED:** Interfaccia su nero puro con nucleo grafico centrale reattivo allo stato del sistema (ascolto, elaborazione, alert).
