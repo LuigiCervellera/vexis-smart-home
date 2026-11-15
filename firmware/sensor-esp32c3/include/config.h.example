@@ -1,0 +1,20 @@
+#pragma once
+
+// Copy this file to `config.h` and fill in your local LAN & MQTT credentials.
+
+#define WIFI_SSID "CHANGE_ME_WIFI_SSID"
+#define WIFI_PASSWORD "CHANGE_ME_WIFI_PASSWORD"
+
+#define MQTT_BROKER "192.168.1.100"
+#define MQTT_PORT 1883
+#define MQTT_USER "vexis_sensor_node"
+#define MQTT_PASSWORD "CHANGE_ME_MQTT_PASSWORD"
+
+#define SENSOR_ROOM_ID "stanza_2"
+
+// I2C Pins for Sensirion SCD40
+#define I2C_SDA 8
+#define I2C_SCL 9
+
+// Passive isolated input (microswitch / PC817 optoisolator) for armored door
+#define DOOR_SENSOR_PIN 4

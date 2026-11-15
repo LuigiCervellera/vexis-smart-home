@@ -1,0 +1,207 @@
+# ==============================================================================
+# VEXIS SMART HOME - UNIFIED DOCKER COMPOSE STACK
+# ==============================================================================
+
+networks:
+  vexis-core:
+    driver: bridge
+  vexis-media:
+    driver: bridge
+  vexis-proxy:
+    driver: bridge
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. CORE DOMOTICA & AI ("VEXIS")
+  # ----------------------------------------------------------------------------
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: vexis-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/acl.conf:/mosquitto/config/acl.conf:ro
+      - ./mosquitto/passwd:/mosquitto/config/passwd:ro
+      - ${DATA_ROOT}/mosquitto/data:/mosquitto/data
+    networks:
+      - vexis-core
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  ollama:
+    image: ollama/ollama:rocm
+    container_name: vexis-ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:--1}
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    volumes:
+      - ${DATA_ROOT}/ollama:/root/.ollama
+    networks:
+      - vexis-core
+
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: vexis-whisper
+    restart: unless-stopped
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=whisper_cpp
+    networks:
+      - vexis-core
+
+  piper:
+    image: rhasspy/wyoming-piper:latest
+    container_name: vexis-piper
+    restart: unless-stopped
+    command: --voice it_IT-paola-medium
+    volumes:
+      - ${DATA_ROOT}/piper:/data
+    networks:
+      - vexis-core
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: vexis-ntfy
+    restart: unless-stopped
+    command: serve
+    environment:
+      - TZ=${TZ:-Europe/Rome}
+    volumes:
+      - ${DATA_ROOT}/ntfy:/var/cache/ntfy
+    networks:
+      - vexis-core
+      - vexis-proxy
+
+  vexis-backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: vexis-backend
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    ports:
+      - "3002:3002" # WebSocket for ESP32-S3 satellites on LAN
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - vexis-core
+      - vexis-media
+      - vexis-proxy
+
+  vexis-frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: vexis-frontend
+    restart: unless-stopped
+    depends_on:
+      - vexis-backend
+    networks:
+      - vexis-proxy
+
+  # ----------------------------------------------------------------------------
+  # 2. HOMELAB & MEDIA SERVICES
+  # ----------------------------------------------------------------------------
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: vexis-jellyfin
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Rome}
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ${DATA_ROOT}/jellyfin/config:/config
+      - ${DATA_ROOT}/jellyfin/cache:/cache
+      - ${MEDIA_ROOT}:/media:ro
+    networks:
+      - vexis-media
+      - vexis-proxy
+
+  immich-postgres:
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    container_name: vexis-immich-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
+    volumes:
+      - ${DATA_ROOT}/immich/postgres:/var/lib/postgresql/data
+    networks:
+      - vexis-media
+
+  immich-redis:
+    image: redis:7-alpine
+    container_name: vexis-immich-redis
+    restart: unless-stopped
+    networks:
+      - vexis-media
+
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: vexis-immich-server
+    restart: unless-stopped
+    environment:
+      - DB_HOSTNAME=immich-postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_DATABASE_NAME=immich
+      - REDIS_HOSTNAME=immich-redis
+    volumes:
+      - ${IMMICH_UPLOAD_LOCATION}:/usr/src/app/upload
+    depends_on:
+      - immich-postgres
+      - immich-redis
+    networks:
+      - vexis-media
+      - vexis-proxy
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vexis-vaultwarden
+    restart: unless-stopped
+    environment:
+      - SIGNUPS_ALLOWED=false
+      - WEBSOCKET_ENABLED=true
+    volumes:
+      - ${DATA_ROOT}/vaultwarden:/data
+    networks:
+      - vexis-proxy
+
+  # ----------------------------------------------------------------------------
+  # 3. EDGE PROXY & CONTAINER MANAGEMENT
+  # ----------------------------------------------------------------------------
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: vexis-npm
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "127.0.0.1:81:81" # Admin UI bound to localhost only
+    volumes:
+      - ${DATA_ROOT}/npm/data:/data
+      - ${DATA_ROOT}/npm/letsencrypt:/etc/letsencrypt
+    networks:
+      - vexis-proxy
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: vexis-portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DATA_ROOT}/portainer:/data
+    networks:
+      - vexis-proxy

@@ -1,0 +1,22 @@
+#pragma once
+
+// Copy this file to `config.h` and fill in your local LAN credentials.
+// `config.h` is excluded from Git via .gitignore.
+
+#define WIFI_SSID "CHANGE_ME_WIFI_SSID"
+#define WIFI_PASSWORD "CHANGE_ME_WIFI_PASSWORD"
+
+#define VEXIS_WS_HOST "192.168.1.100"
+#define VEXIS_WS_PORT 3002
+#define VEXIS_WS_TOKEN "CHANGE_ME_HEX_TOKEN_FOR_ESP32_AND_KIOSK"
+#define SATELLITE_ROOM_ID "sala_pranzo"
+
+// I2S Microphone (INMP441)
+#define I2S_MIC_SCK 4
+#define I2S_MIC_WS  5
+#define I2S_MIC_SD  6
+
+// I2S Amplifier (MAX98357A)
+#define I2S_SPK_BCLK 7
+#define I2S_SPK_LRC  15
+#define I2S_SPK_DOUT 16

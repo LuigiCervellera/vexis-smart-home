@@ -1,0 +1,43 @@
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+docker/mosquitto/passwd
+
+# Dependencies & Build Artifacts
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+
+# Docker Persistent Volumes & Media
+docker/data/
+docker/volumes/
+immich-library/
+jellyfin-media/
+jellyfin-config/
+ollama-models/
+whisper-models/
+piper-models/
+
+# AI Model Weights
+*.gguf
+*.bin
+*.tflite
+*.onnx
+
+# Firmware (PlatformIO / ESP-IDF / ESPHome)
+.pio/
+.esphome/
+firmware/**/include/config.h
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
