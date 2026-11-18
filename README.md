@@ -43,6 +43,7 @@ flowchart LR
 | **Pannello a Muro** | Schermo 7" AMOLED Touch (Chromium Kiosk fullscreen) | HUD di controllo, stato CO2, modali foto/QR |
 | **Satelliti Vocali** | `ESP32-S3` + microfono I2S `INMP441` + amp `MAX98357A` | Wake word locale, streaming PCM e riproduzione TTS |
 | **Sensori Aria & Accessi** | `ESP32-C3` + `Sensirion SCD40` (I2C) + `PC817` / microswitch | Misura CO2 reale (NDIR), temp/umidità, stato portoni |
+| **Videocitofonia (2 Accessi)** | `2x Videocitofoni IP PoE` *(modello da definire, RTSP/ONVIF/SIP)* | Video/audio locale sui 2 portoni blindati (zero relè di apertura) |
 
 ---
 
@@ -56,6 +57,7 @@ Tutti i servizi sono orchestrati in [`docker/docker-compose.yml`](docker/docker-
 - **Whisper.cpp:** Speech-to-Text locale a bassa latenza.
 - **Piper TTS:** Sintesi vocale locale.
 - **Ntfy:** Push notification locale per impostare sveglie su Android via Broadcast Intent (`android.intent.action.SET_ALARM`).
+- **go2rtc:** Streaming video locale a bassissima latenza (`RTSP`/`ONVIF` → `WebRTC`) per i due videocitofoni verso il Kiosk AMOLED.
 - **Backend Orchestratore (`backend/`):** Node.js + TypeScript (utente non-root) per bridge MQTT JSON-RPC, server WebSocket autenticato, memoria effimera e *function calling* (luci/clima, sveglie, spazio dischi, ricerca foto Immich).
 - **Frontend Kiosk (`frontend/`):** React + TypeScript + Tailwind CSS su `nginx-unprivileged`, tema nero puro `#000000` AMOLED, nucleo ottico reattivo e modali con auto-dismiss (60–90s).
 
@@ -97,6 +99,11 @@ Tutti i servizi sono orchestrati in [`docker/docker-compose.yml`](docker/docker-
 - **Doppia Wake Word & Barge-In:** Attivazione locale su `ESP32-S3` tramite `Vexis` + parola di stop/interruzione immediata per troncare risposte lunghe o TTS in corso.
 - **Personalità & Memoria Anti-Context-Rot:** Tono asciutto e analitico (stile *Chatty Stick* / *EDI*), sessioni stateless per stanza con sliding window (max 3 turni, TTL 45–60s) e iniezione live dello stato MQTT ad ogni richiesta.
 - **Visualizer Ottico AMOLED:** Interfaccia su nero puro `#000000` con nucleo grafico centrale reattivo allo stato del sistema (ascolto, elaborazione, alert).
+
+### 7. Videocitofonia Locale (2 Portoni Blindati)
+- **Doppio Accesso Indipendente:** 2 videocitofoni IP locali (modello in definizione, PoE con `RTSP`/`ONVIF`/`SIP` e zero cloud) per distinguere istantaneamente quale dei due portoni ha suonato.
+- **Stream Live & Notifiche:** Alla suonata, i satelliti `ESP32-S3` annunciano l'ingresso interessato, il pannello AMOLED apre la modale video live tramite `go2rtc` (auto-dismiss `60–90s`) e `Ntfy` invia uno snapshot su Android.
+- **Sicurezza Fisica:** Nessun attuatore di apertura sui portoni blindati; solo lettura passiva dello stato tramite `PC817` / microswitch.
 
 ---
 

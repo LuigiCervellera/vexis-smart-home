@@ -16,6 +16,7 @@
 - **Pannello a Muro:** Schermo 7" AMOLED Touch (modalità kiosk Chromium fullscreen, tema scuro/terminale).
 - **Satelliti Vocali di Stanza:** Moduli `ESP32-S3` (es. M5Stack CoreS3 o kit DIY con microfono I2S INMP441 + amp MAX98357A) alimentati via cavo USB-C (dock magnetica a muro rimandata a fase 2).
 - **Sensori Qualità Aria:** `Sensirion SCD40` (CO2 reale NDIR + Temp + Umidità) su bus I2C (integrati nei satelliti o in moduli DIY da incasso 503 con ESP32-C3 + micro-alimentatore 230V->5V isolato).
+- **Videocitofonia (2 Accessi - Portoni Blindati):** 2x Videocitofoni IP locali (modello da definire, preferibilmente PoE con supporto `RTSP` / `ONVIF` / `SIP` locale e **senza** relè di apertura sui portoni blindati, abbinati ai sensori passivi PC817/microswitch).
 
 ## 3. Stack Software & Servizi Self-Hosted (Docker)
 Tutti i servizi sono orchestrati tramite Docker Compose su Linux con policy `restart: unless-stopped`:
@@ -25,6 +26,7 @@ Tutti i servizi sono orchestrati tramite Docker Compose su Linux con policy `res
 - **`Ollama`:** Runtime LLM locale (`llama3.1:8b` o `qwen2.5:7b`) residente in RAM (`OLLAMA_KEEP_ALIVE=-1`) con accelerazione GPU integrata AMD Radeon.
 - **`Whisper.cpp`:** Speech-to-Text locale a bassa latenza.
 - **`Piper TTS` (o `Kokoro TTS`):** Sintesi vocale locale + filtri audio FFmpeg.
+- **`go2rtc`:** Bridge video locale a bassissima latenza (`RTSP`/`ONVIF` → `WebRTC`) per lo streaming dei due videocitofoni verso il pannello Kiosk AMOLED.
 - **Backend Orchestratore (Node.js / TypeScript):**
   - Client `mqtt` per controllo relè Shelly via JSON-RPC (`<device>/rpc`) e lettura consumi/stati real-time.
   - Server `WebSocket` per streaming audio PCM grezzo dai satelliti ESP32-S3 e telemetria real-time alla dashboard.
@@ -86,3 +88,8 @@ vexis-smart-home/
 - **Doppia Wake Word & Barge-In:** Attivazione locale su ESP32-S3 tramite `Vexis` + parola di stop/interruzione immediata per troncare risposte lunghe o TTS in corso.
 - **Personalità & Memoria Anti-Context-Rot:** Tono asciutto e analitico (stile *Chatty Stick* / *EDI*), sessioni stateless per stanza con finestra scorrevole (max 3 turni, TTL 45-60s) e iniezione live dello stato MQTT della casa ad ogni richiesta.
 - **Visualizer Ottico AMOLED:** Interfaccia su nero puro con nucleo grafico centrale reattivo allo stato del sistema (ascolto, elaborazione, alert).
+
+### 7. Videocitofonia Locale (2 Portoni Blindati)
+- **Doppio Accesso Indipendente (`door_1` / `door_2`):** Due videocitofoni IP locali (modello in fase di scelta, PoE con `RTSP`/`ONVIF`/`SIP` e zero cloud) collegati alla LAN domestica.
+- **Notifica & Proiezione Automatica:** Alla suonata su uno dei due ingressi, i satelliti `ESP32-S3` annunciano quale porta ha suonato, il Kiosk AMOLED apre la modale temporanea (`60-90s`) con il flusso video live via `go2rtc` e `Ntfy` invia uno snapshot push sullo smartphone Android.
+- **Sicurezza Fisica:** Nessun attuatore di sblocco collegato ai portoni blindati; solo monitoraggio passivo di apertura tramite microswitch / `PC817`.

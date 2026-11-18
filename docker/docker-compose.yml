@@ -80,6 +80,16 @@ services:
       - vexis-core
       - vexis-proxy
 
+  go2rtc:
+    image: alexxit/go2rtc:latest
+    container_name: vexis-go2rtc
+    restart: unless-stopped
+    volumes:
+      - ${DATA_ROOT}/go2rtc:/config
+    networks:
+      - vexis-core
+      - vexis-proxy
+
   vexis-backend:
     build:
       context: ../backend
