@@ -40,9 +40,10 @@
 - **Link & Percorsi:** Invio rapido di itinerari (Google Maps), promemoria o allerte critiche sullo smartphone.
 - **QR Code Ospiti Dinamico:** Proiezione temporanea sul Kiosk di credenziali Wi-Fi Guest o token JWT a scadenza con scope ristretto alle sole luci delle aree comuni (`IDLE` → `LISTENING` → `EXECUTING` → `TEMPORARY_MODAL`, auto-dismiss `60–90s`).
 
-### Interrogazione Homelab (Ollama Tools)
+### Interrogazione Homelab & Media (Ollama Tools)
 - **Diagnostica Server:** Controllo vocale di CPU, RAM e spazio libero su NVMe e unità secondaria (`get_system_storage`).
 - **Ricerca Semantica Foto (Immich):** Ricerca vocale tramite `/api/search/smart` (API Key **read-only**) e proiezione temporanea sul pannello AMOLED.
+- **Musica Lossless & Playlist Vocali (Jellyfin):** Digitalizzazione in **FLAC** della propria collezione di dischi per uso personale, con avvio vocale delle playlist (*"Vexis, avvia la playlist..."*) tramite Jellyfin REST API verso lo stereo (DAC USB / streamer locale) e controlli Play/Pausa + copertina sul pannello AMOLED.
 - **Stato Servizi:** Verifica healthcheck dei servizi Homelab (`Jellyfin`, `Vaultwarden`, `Immich`).
 
 ---
@@ -138,7 +139,7 @@ vexis-smart-home/
 
 ### Servizi Homelab Aggiuntivi
 - **Immich:** Backup e ricerca semantica foto/video su storage secondario (collegato a Vexis con API Key **read-only**).
-- **Jellyfin:** Media server con transcodifica hardware GPU Radeon (`/dev/dri`).
+- **Jellyfin:** Media server per film, serie TV e **musica lossless (FLAC + playlist)**, con transcodifica hardware GPU Radeon (`/dev/dri`) e supporto ad app musicali dedicate (es. *Finamp*).
 - **Vaultwarden:** Gestore password self-hosted compatibile Bitwarden.
 - **Nginx Proxy Manager:** Reverse proxy per i domini locali (`vexis.home`, `immich.home`, `jellyfin.home`, `vault.home`), UI admin legata a `127.0.0.1:81`.
 - **Portainer:** Monitoraggio container Docker con socket montato in sola lettura (`:ro`).
