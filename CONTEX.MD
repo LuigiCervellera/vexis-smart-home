@@ -6,17 +6,17 @@
 - **Identità Assistente ("Vexis"):** Wake word `Vexis` (configurabile via `.env` e modello `.tflite`). Tono asciutto, analitico, leggermente cinico/mecha (stile *Chatty Stick* / *EDI*), con visualizer HUD ispirato a un nucleo ottico minimale su nero puro AMOLED.
 
 ## 2. Hardware Definito
-- **Server Centrale:** Mini PC AMD Ryzen 7 (es. Beelink SER5 MAX/SER6 o Minisforum serie UM) con **32GB RAM**, NVMe primario (OS, DB Postgres/Redis, modelli AI) + storage secondario (HDD/SSD 2.5" o 2° NVMe per librerie foto Immich e media Jellyfin) + UPS di protezione e BIOS impostato su *Restore on AC Power Loss: Power On*.
-- **Attuatori Luci (230V AC - Zero-Crossing Switching):**
-  - 1x `Shelly Plus 2PM` (2 canali, luci Sala da Pranzo).
-  - 2x `Shelly 1PM Mini Gen3` (1 canale ciascuno, luci Stanze 2 e 3).
+- **Server & NAS Homemade in Rack:** Mini PC AMD Ryzen 7 (es. Beelink SER8 / Minisforum UM con **32GB DDR5** su slot SO-DIMM espandibili a 64GB, **Debian Stable headless**), NVMe primario (OS, DB Postgres/Redis, modelli AI) + **DAS 4-bay USB-C 10Gbps** in modalità JBOD (`MergerFS + SnapRAID` per Immich/Jellyfin/FLAC + spazio backup incrementale `Restic/BorgBackup` + `smartmontools`) + Switch PoE + UPS di protezione e BIOS impostato su *Restore on AC Power Loss: Power On*.
+- **Rete IoT Dedicata:** Secondo router/Access Point in *AP Mode* cablato in Ethernet con SSID dedicato `Vexis-IoT` (solo 2.4 GHz, canale separato) per non saturare il Wi-Fi principale.
+- **Attuatori Luci (230V AC - Zero-Crossing Switching & Dimmer):**
+  - Soggiorno (2 gruppi da 2 luci, ex relè commutatore 4-stati): `1x Shelly Plus 2PM` (con Shelly Script locale 4-stati) oppure `2x Shelly Dimmer Gen3` (se si opta per lampadine LED dimmerabili).
+  - Stanze secondarie: `Shelly 1PM Mini Gen3` (o `Shelly Dimmer Gen3` in camera per sveglia-luce graduale), comandati da pulsanti fisici 230V momentanei su `503`.
 - **Attuatori Clima:**
   - 2x `Shelly 1 Mini Gen3` (contatto pulito isolato per Caldaia e Chiller).
   - 1x `Shelly BLU H&T Display ZB` (sensore temperatura ambiente).
 - **Pannello a Muro:** Schermo 7" AMOLED Touch (modalità kiosk Chromium fullscreen, tema scuro/terminale).
-- **Satelliti Vocali di Stanza:** Moduli `ESP32-S3` (es. M5Stack CoreS3 o kit DIY con microfono I2S INMP441 + amp MAX98357A) alimentati via cavo USB-C (dock magnetica a muro rimandata a fase 2).
-- **Sensori Qualità Aria:** `Sensirion SCD40` (CO2 reale NDIR + Temp + Umidità) su bus I2C (integrati nei satelliti o in moduli DIY da incasso 503 con ESP32-C3 + micro-alimentatore 230V->5V isolato).
-- **Videocitofonia (2 Accessi - Portoni Blindati):** 2x Videocitofoni IP locali (modello da definire, preferibilmente PoE con supporto `RTSP` / `ONVIF` / `SIP` locale e **senza** relè di apertura sui portoni blindati, abbinati ai sensori passivi PC817/microswitch).
+- **Satelliti Vocali & Sensori Aria da Incasso 503 (5 Stanze):** `5x ESP32-S3` compatti (es. XIAO / SuperMini) installati negli slot vuoti delle scatole `503` (zero cavi a vista) con alimentatore certificato isolato `Mean Well IRM-05-5` (230V->5V), microfono I2S `INMP441`, amp `MAX98357A` + micro-speaker 4Ω e sensore `Sensirion SCD40` (CO2 NDIR + Temp + Umidità) su I2C (più `PC817`/microswitch passivi sui 2 portoni blindati).
+- **Videocitofonia (2 Accessi - Portoni Blindati):** 2x Videocitofoni IP PoE locali (modello da definire, compatibili `RTSP` / `ONVIF` / `SIP`, senza NFC); l'elettroserratura 12V esistente è comandabile solo dall'interno tramite contatto pulito interno (mai esposta sul posto esterno).
 
 ## 3. Stack Software & Servizi Self-Hosted (Docker)
 Tutti i servizi sono orchestrati tramite Docker Compose su Linux con policy `restart: unless-stopped`:

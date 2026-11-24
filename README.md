@@ -25,7 +25,8 @@
 - **Alert Vocali Mirati:** Avviso vocale sul singolo satellite della stanza interessata sopra i `1200–1300 ppm`, con cooldown anti-spam di 30 minuti e override immediato per picchi critici `>1600 ppm`.
 - **Indicatore HUD:** Badge dinamico verde / ambra / rosso sulla dashboard AMOLED e sul display del satellite.
 
-### Interazione Vocale & UX HUD
+### Interazione Vocale Multi-Stanza & UX HUD
+- **Copertura 5 Stanze & Arbitrazione Anti-Eco:** 5 satelliti `ESP32-S3` integrati negli slot vuoti delle scatole `503` (zero cavi a vista); se due stanze vicine captano la wake word insieme, il backend arbitra entro ~250 ms scegliendo il segnale più forte. Include funzione **Interfono di casa** tra stanze.
 - **Doppia Wake Word & Barge-In:** Rilevazione locale su `ESP32-S3` per `Vexis` + parola di interruzione immediata per fermare risposte lunghe o TTS.
 - **Memoria Anti-Context-Rot:** Sessioni stateless effimere per stanza (sliding window max 3 turni, TTL 45–60s) con iniezione live dello stato MQTT della casa ad ogni richiesta.
 - **Visualizer Ottico AMOLED:** Interfaccia su nero puro `#000000` con nucleo centrale reattivo allo stato (`IDLE`, `LISTENING`, `THINKING`, `SPEAKING`).
@@ -52,13 +53,13 @@
 
 | Categoria | Componenti | Ruolo |
 | :--- | :--- | :--- |
-| **Server Centrale** | Mini PC AMD Ryzen 7, 32 GB RAM, NVMe primario + storage secondario, UPS | Host Docker, modelli AI in RAM e servizi Homelab |
-| **Luci (230V AC)** | `1× Shelly Plus 2PM` (Sala da Pranzo), `2× Shelly 1PM Mini Gen3` (Stanze 2 e 3) | Controllo luci Zero-Crossing & telemetria consumi |
+| **Server & NAS (Rack)** | Mini PC AMD Ryzen 7 (32 GB DDR5 espandibili, **Debian Stable headless**) + **DAS 4-bay USB-C 10 Gbps** (JBOD: `MergerFS + SnapRAID` + backup `Restic/Borg`) + Switch PoE + UPS | Host Docker, modelli AI 7B–8B in RAM, storage media/foto e backup locali |
+| **Rete IoT Dedicata** | Access Point dedicato in *AP Mode* (SSID `Vexis-IoT` solo 2.4 GHz su canale separato) | Scarica il Wi-Fi principale dal carico dei 20–30 moduli IoT |
+| **Luci (230V AC)** | `Shelly Plus 2PM` / `Shelly 1PM Mini Gen3` + opzione `Shelly Dimmer Gen3` (soggiorno/camera con lampadine dimmerabili) | Controllo luci Zero-Crossing, sequenza 4-stati soggiorno & dimmering graduale |
 | **Clima** | `2× Shelly 1 Mini Gen3` (contatto pulito), `1× Shelly BLU H&T Display ZB` | Comando caldaia/chiller e lettura temperatura |
-| **Comandi a Muro** | Pulsanti cablati 230V (NA momentanei) su scatole `503` *(serie civile in definizione)* | Controllo fisico affidabile + multi-click via Shelly |
+| **Comandi a Muro** | Pulsanti cablati 230V (NA momentanei singoli e doppi `1P+1P`) su scatole `503` *(serie civile in definizione)* | Controllo fisico affidabile + multi-click via Shelly |
 | **Pannello Kiosk** | Schermo 7" AMOLED Touch (Chromium fullscreen) | Dashboard HUD, badge CO₂, modali foto/QR/citofono |
-| **Satelliti Vocali** | `ESP32-S3` + microfono I2S `INMP441` + amp `MAX98357A` (USB-C) | Wake word locale, stream PCM e riproduzione TTS |
-| **Sensori Aria & Accessi** | `ESP32-C3` + `Sensirion SCD40` (I2C) + `PC817` / microswitch (incasso 503) | CO₂ NDIR, temp/umidità e stato passivo portoni |
+| **Satelliti & Sensori (5 Stanze)** | `5× ESP32-S3` (incasso `503` con `Mean Well IRM-05-5` isolato) + `INMP441` + `MAX98357A` + `Sensirion SCD40` (+ `PC817` sui portoni) | All-in-one da incasso: wake word, voce, interfono, CO₂ NDIR e stato portoni |
 | **Videocitofonia** | `2× Videocitofoni IP PoE` *(modello in definizione, RTSP/ONVIF/SIP, senza NFC)* | Video/audio locale sui 2 portoni blindati |
 
 ---
@@ -151,4 +152,5 @@ vexis-smart-home/
 ### Idee & Decisioni Aperte (Fase 2 / Brainstorming)
 - **Scelta serie civile pulsanti 230V (503):** confronto aperto tra *BTicino Living Now*, *Vimar Linea*, *Vimar Arké* e *AVE Tekla 44* (pulsanti momentanei singoli e doppi `1P+1P`).
 - **Scelta modello videocitofoni PoE (senza NFC):** valutazione aperta tra *Reolink Video Doorbell PoE*, *Dahua VTO2202F-P* e *Hikvision DS-KV8113*.
-- **Dock magnetica a muro** per i satelliti vocali `ESP32-S3` (rimandata a Fase 2).
+- **Dimmerazione LED:** valutazione di `Shelly Dimmer Gen3` in soggiorno (2 gruppi) e camera (sveglia-luce graduale).
+- **Upgrade AI futuro:** Mini PC scelto con slot SO-DIMM DDR5 espandibili (64 GB) e/o porta OCuLink/USB4 per eventuali modelli più grandi (es. *Inkling 2 Mini* o eGPU dedicata).
