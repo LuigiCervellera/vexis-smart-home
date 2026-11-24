@@ -2,6 +2,7 @@
 
 > Sistema domotico, homelab self-hosted e assistente vocale **100% locale, open source e Zero-Cloud**.
 
+**Italiano** · [English](README.en.md)  
 [**1. Features**](#1-features) · [**2. Hardware**](#2-hardware) · [**3. Software**](#3-software) · [**4. Extras**](#4-extras)
 
 ---
